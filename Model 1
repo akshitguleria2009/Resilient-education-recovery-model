@@ -1,0 +1,108 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+
+# -----------------------------
+# BASIC MODEL INPUTS
+# -----------------------------
+
+schools = 1656
+
+budget = 100_000_000       # model budget: $100 million
+
+temporary_percent = 50     # % of budget going to temporary education
+
+temporary_cost = 50_000   # ASSUMPTION: cost per temporary unit
+reconstruction_cost = 500_000  # ASSUMPTION: cost per reconstructed school
+
+reconstruction_rate = 0.08     # ASSUMPTION: 8% of funded reconstruction/month
+
+months = 24
+
+
+# -----------------------------
+# SPLIT THE BUDGET
+# -----------------------------
+
+temporary_budget = budget * temporary_percent / 100
+reconstruction_budget = budget - temporary_budget
+
+
+# How many temporary learning units can we provide?
+temporary_units = temporary_budget / temporary_cost
+
+# How many schools can we fund for reconstruction?
+reconstruction_schools = reconstruction_budget / reconstruction_cost
+
+
+# -----------------------------
+# SIMULATE RECOVERY
+# -----------------------------
+
+time = np.arange(0, months + 1)
+
+recovery = []
+
+for month in time:
+
+    # Temporary capacity appears quickly.
+    temporary_capacity = min(temporary_units, schools)
+
+    # Permanent reconstruction increases over time.
+    permanent_capacity = min(
+        reconstruction_schools * (1 - np.exp(-reconstruction_rate * month)),
+        schools
+    )
+
+    total_capacity = min(
+        temporary_capacity + permanent_capacity,
+        schools
+    )
+
+    recovery_percent = (total_capacity / schools) * 100
+
+    recovery.append(recovery_percent)
+
+
+# -----------------------------
+# PRINT RESULTS
+# -----------------------------
+
+print("MYANMAR EDUCATION RECOVERY MODEL")
+print("--------------------------------")
+
+print(f"Schools modelled: {schools:,}")
+print(f"Total budget: ${budget:,.0f}")
+
+print(f"Temporary allocation: {temporary_percent}%")
+print(f"Reconstruction allocation: {100 - temporary_percent}%")
+
+print(f"Temporary units funded: {temporary_units:.1f}")
+print(f"Schools funded for reconstruction: {reconstruction_schools:.1f}")
+
+print(f"Recovery after 6 months: {recovery[6]:.1f}%")
+print(f"Recovery after 12 months: {recovery[12]:.1f}%")
+print(f"Recovery after 24 months: {recovery[24]:.1f}%")
+
+
+# -----------------------------
+# PLOT
+# -----------------------------
+
+plt.figure(figsize=(9, 5))
+
+plt.plot(
+    time,
+    recovery,
+    linewidth=2
+)
+
+plt.xlabel("Months after earthquake")
+plt.ylabel("Educational capacity restored (%)")
+
+plt.title("Educational Recovery After Earthquake")
+
+plt.ylim(0, 100)
+plt.grid(True)
+
+plt.show()
